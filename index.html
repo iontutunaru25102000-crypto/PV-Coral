@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PV Revizie Ventilatoare - Coral Construct</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f2f5; padding: 15px; color: #333; }
+        .container { max-width: 900px; margin: 0 auto; background: #fff; padding: 25px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        
+        /* Stiluri pentru ecran */
+        .header-print { display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #8b1a1a; padding-bottom: 15px; margin-bottom: 20px; }
+        .header-print img { max-height: 80px; }
+        .header-print h1 { font-size: 18px; color: #8b1a1a; text-align: right; }
+        .header-print h1 span { display: block; font-size: 14px; color: #555; font-weight: normal; margin-top: 5px; }
+        
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; font-weight: 600; font-size: 13px; margin-bottom: 4px; color: #555; }
+        .form-group input, .form-group textarea { width: 100%; padding: 8px 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; }
+        .form-group textarea { resize: vertical; min-height: 60px; }
+        
+        .row { display: flex; gap: 15px; flex-wrap: wrap; }
+        .row > .form-group { flex: 1; min-width: 200px; }
+        
+        .checkboxes { display: flex; gap: 15px; flex-wrap: wrap; margin-top: 5px; }
+        .checkboxes label { font-weight: normal; display: flex; align-items: center; gap: 5px; cursor: pointer; }
+        
+        table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 13px; }
+        th, td { border: 1px solid #333; padding: 8px; text-align: left; vertical-align: top; }
+        th { background: #f0f0f0; font-weight: 600; }
+        td.center { text-align: center; }
+        td input[type="checkbox"] { transform: scale(1.2); cursor: pointer; }
+        
+        .btn { display: inline-block; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; font-weight: 600; margin: 5px 5px 5px 0; transition: 0.2s; }
+        .btn-primary { background: #8b1a1a; color: #fff; }
+        .btn-primary:hover { background: #6e1414; }
+        .btn-secondary { background: #555; color: #fff; }
+        .btn-secondary:hover { background: #333; }
+        .btn-outline { background: transparent; border: 1px solid #8b1a1a; color: #8b1a1a; }
+        .btn-outline:hover { background: #8b1a1a; color: #fff; }
+        
+        .photo-upload-area { border: 2px dashed #ccc; padding: 20px; text-align: center; border-radius: 8px; margin: 15px 0; cursor: pointer; }
+        .photo-upload-area:hover { border-color: #8b1a1a; background: #fafafa; }
+        
+        .photo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
+        .photo-grid .photo-item { position: relative; }
+        .photo-grid img { width: 100%; height: 200px; object-fit: cover; border: 1px solid #ddd; border-radius: 4px; display: block; }
+        .photo-grid .remove-btn { position: absolute; top: 5px; right: 5px; background: rgba(139,26,26,0.9); color: #fff; border: none; border-radius: 50%; width: 25px; height: 25px; cursor: pointer; font-weight: bold; line-height: 1; }
+        .photo-grid .legend-input { width: 100%; margin-top: 4px; padding: 4px 6px; font-size: 12px; border: 1px solid #ddd; border-radius: 4px; }
+        
+        .footer-print { margin-top: 30px; padding-top: 15px; border-top: 1px solid #ddd; text-align: center; font-size: 12px; color: #666; }
+        .footer-print span { display: inline-flex; align-items: center; gap: 5px; margin: 0 10px; }
+        
+        /* Stiluri pentru PRINT / PDF */
+        @media print {
+            body { background: #fff; padding: 0; }
+            .container { box-shadow: none; padding: 0; max-width: 100%; }
+            .no-print { display: none !important; }
+            .print-only { display: block !important; }
+            .form-group input, .form-group textarea { border: none; padding: 0; background: transparent; font-weight: 600; }
+            .photo-grid img { height: 220px; }
+            .photo-grid { grid-template-columns: 1fr 1fr; page-break-inside: avoid; }
+            .page-break { page-break-before: always; }
+            table { page-break-inside: auto; }
+            tr { page-break-inside: avoid; }
+            .header-print { border-bottom: 2px solid #8b1a1a; }
+        }
+        .print-only { display: none; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- BUTOANE ACȚIUNE (nu apar la print) -->
+    <div class="no-print" style="margin-bottom: 20px; text-align: center;">
+        <button class="btn btn-primary" onclick="window.print()">📄 Generează PDF (Print / Save as PDF)</button>
+        <button class="btn btn-secondary" onclick="exportWord()">📝 Exportă Word (.docx)</button>
+        <button class="btn btn-outline" onclick="resetForm()">🔄 Resetează</button>
+    </div>
+
+    <!-- ANTET PRINTABIL -->
+    <div class="header-print">
+        <div>
+            <img id="logoImg" src="https://via.placeholder.com/150x80/8b1a1a/ffffff?text=CORAL" alt="Logo Coral">
+            <br>
+            <button class="no-print" style="margin-top:5px; font-size:10px; cursor:pointer;" onclick="document.getElementById('logoInput').click()">Schimbă logo</button>
+            <input type="file" id="logoInput" accept="image/*" class="no-print" style="display:none;" onchange="loadLogo(event)">
+        </div>
+        <h1>PROCES VERBAL DE REVIZIE VENTILATOARE <span>Miron Costin</span></h1>
+    </div>
+
+    <!-- DATE GENERALE -->
+    <div class="row">
+        <div class="form-group">
+            <label>Data:</label>
+            <input type="text" id="dataPV" value="02.07.26 - 31.07.26" class="editable">
+        </div>
+        <div class="form-group">
+            <label>Tehnician:</label>
+            <input type="text" id="tehnician" value="Cebotari Radu, Tutunaru Ion" class="editable">
+        </div>
+        <div class="form-group">
+            <label>Adresa:</label>
+            <input type="text" id="adresa" value="Miron Costin 9" class="editable">
+        </div>
+    </div>
+
+    <!-- TIP VERIFICARE -->
+    <div class="form-group">
+        <label>Tip verificare:</label>
+        <div class="checkboxes">
+            <label><input type="radio" name="tipVerificare" value="Lunară"> Lunară</label>
+            <label><input type="radio" name="tipVerificare" value="Trimestrială"> Trimestrială</label>
+            <label><input type="radio" name="tipVerificare" value="Semestrială"> Semestrială</label>
+            <label><input type="radio" name="tipVerificare" value="Anuală" checked> Anuală</label>
+        </div>
+    </div>
+
+    <!-- INSTALATIE SI ECHIPAMENT -->
+    <div class="form-group">
+        <label>Instalație:</label>
+        <input type="text" id="instalatie" value="Sistem de Aspirație / Refulare" class="editable">
+    </div>
+    <div class="form-group">
+        <label>Echipament:</label>
+        <textarea id="echipament" class="editable">Ventilatoare axiale: SystemAir, CD355S1-4buc, K 125 M Sileo-8buc, K 125 XL Sileo-4buc, K 160 m Sileo-8buc, K 160 XL Sileo 1, K 200 L Sileo-3buc, K 200 M Sileo-4buc, K 200 L Sileo-4buc, K 250 M Sileo-2buc, K 250 L Sileo-4buc, K 315 M Sileo-1buc, K 315 L Sileo-4buc, MUB 062630D4-2buc, AXC830-9/16-1buc, AXC3630-9/13-1buc.</textarea>
+    </div>
+
+    <!-- ZONE -->
+    <div class="form-group">
+        <label>Zone / Departamente:</label>
+        <textarea id="zone" class="editable">• Departament recuperare creanțe P+4 (12.400)
+• Departament Administrare P+4 (12.400)
+• Etaj Tehnic P+3 (9.900)
+• Departament BBServices AND Customer Car P+2 (6.600)
+• Departament Operațional P+2 (6.600)
+• Call Center P+1 (3.300)
+• Card Bancar P+1 (3.300)</textarea>
+    </div>
+
+    <!-- STATUS SISTEM -->
+    <div class="row">
+        <div class="form-group">
+            <label>Status la sosire:</label>
+            <input type="text" id="statusSosire" value="Funcțional" class="editable">
+        </div>
+        <div class="form-group">
+            <label>Status la plecare:</label>
+            <input type="text" id="statusPlecare" value="Funcțional" class="editable">
+        </div>
+    </div>
+
+    <!-- TABEL CRITERII -->
+    <h3 style="margin: 20px 0 10px; font-size: 15px; color: #8b1a1a;">Descrierea operațiunilor și statut</h3>
+    <table id="tabelCriterii">
+        <thead>
+            <tr>
+                <th style="width: 60%;">Descrierea operațiunilor</th>
+                <th style="width: 13%; text-align: center;">Conform</th>
+                <th style="width: 13%; text-align: center;">Neconform</th>
+                <th style="width: 14%; text-align: center;">Realizat</th>
+            </tr>
+        </thead>
+        <tbody id="tabelBody">
+            <!-- Rândurile vor fi generate de JS -->
+        </tbody>
+    </table>
+    <button class="btn btn-outline no-print" onclick="addRow()" style="font-size: 12px; padding: 6px 12px;">+ Adaugă rând</button>
+
+    <!-- OBSERVATII -->
+    <div class="form-group" style="margin-top: 20px;">
+        <label>Observații și recomandări:</label>
+        <textarea id="observatii" class="editable" style="min-height: 80px;">Se recomandă continuarea reviziilor periodice conform graficului stabilit, pentru menținerea eficienței energetice și prevenirea defecțiunilor.</textarea>
+    </div>
+
+    <!-- ZONA POZE -->
+    <div class="no-print" style="margin-top: 25px;">
+        <h3 style="font-size: 15px; color: #8b1a1a; margin-bottom: 10px;">📸 Poze (se aranjează automat câte 4 pe pagină)</h3>
+        <div class="photo-upload-area" onclick="document.getElementById('photoInput').click()">
+            <p style="font-size: 14px; color: #666;">Apasă aici pentru a adăuga poze</p>
+            <p style="font-size: 12px; color: #999;">(Poți selecta mai multe deodată)</p>
+        </div>
+        <input type="file" id="photoInput" accept="image/*" multiple style="display:none;" onchange="addPhotos(event)">
+        <div class="photo-grid" id="photoGrid"></div>
+    </div>
+
+    <!-- FOOTER PRINTABIL -->
+    <div class="footer-print">
+        <span>📞 +40 XXX XXX XXX</span>
+        <span>✉️ office@coralconstruct.ro</span>
+        <span>📍 Calea Griviței 180, Sector 1, București</span>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/docx@7.3.0/build/index.umd.js"></script>
+<script>
+    // --- DATE INITIALE TABEL ---
+    const criteriiInitiale = [
+        "Se va verifica să nu existe alarme la nivelul elementelor de comandă.",
+        "Se va verifica să nu existe defecte mecanice sau urme de coroziune.",
+        "Se va verifica să nu fie percepute zgomote și/sau vibrații anormale în funcționare.",
+        "Se va verifica starea mecanică a suporturilor de susținere a instalației.",
+        "Se va verifica starea mecanică a tubulaturii vizual, în zonele accesibile.",
+        "Se va verifica secțiunea de refulare.",
+        "Se va urmări: să nu existe corpuri străine în secțiunea gurii; curățarea de praf; alte aspecte ce ar putea provoca diminuarea secțiunii.",
+        "Se vor verifica aparatajele de protecție și comandă (vizual).",
+        "Se vor realiza adaptări ale setărilor dacă este cazul (programator orar, senzori crepusculari etc.)."
+    ];
+
+    function renderTable() {
+        const tbody = document.getElementById('tabelBody');
+        tbody.innerHTML = '';
+        criteriiInitiale.forEach((text, idx) => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><input type="text" value="${text}" style="width:100%; border:none; background:transparent; font-size:13px;" class="editable"></td>
+                <td class="center"><input type="checkbox" checked></td>
+                <td class="center"><input type="checkbox"></td>
+                <td class="center"><input type="checkbox" checked></td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function addRow() {
+        const tbody = document.getElementById('tabelBody');
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td><input type="text" value="" placeholder="Descriere operațiune..." style="width:100%; border:none; background:transparent; font-size:13px;" class="editable"></td>
+            <td class="center"><input type="checkbox"></td>
+            <td class="center"><input type="checkbox"></td>
+            <td class="center"><input type="checkbox"></td>
+        `;
+        tbody.appendChild(tr);
+    }
+
+    // --- LOGO ---
+    function loadLogo(event) {
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('logoImg').src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+    }
+
+    // --- POZE ---
+    let poze = [];
+    function addPhotos(event) {
+        const files = event.target.files;
+        for (let i = 0; i < files.length; i++) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                poze.push({ src: e.target.result, legend: '' });
+                renderPhotos();
+            };
+            reader.readAsDataURL(files[i]);
+        }
+        event.target.value = '';
+    }
+
+    function renderPhotos() {
+        const grid = document.getElementById('photoGrid');
+        grid.innerHTML = '';
+        poze.forEach((p, idx) => {
+            const div = document.createElement('div');
+            div.className = 'photo-item';
+            div.innerHTML = `
+                <img src="${p.src}" alt="Poză ${idx+1}">
+                <button class="remove-btn no-print" onclick="removePhoto(${idx})">×</button>
+                <input type="text" class="legend-input" placeholder="Legendă poză..." value="${p.legend}" onchange="updateLegend(${idx}, this.value)">
+            `;
+            grid.appendChild(div);
+        });
+    }
+
+    function removePhoto(idx) {
+        poze.splice(idx, 1);
+        renderPhotos();
+    }
+
+    function updateLegend(idx, val) {
+        poze[idx].legend = val;
+    }
+
+    // --- EXPORT WORD ---
+    function exportWord() {
+        const { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, WidthType, AlignmentType, ImageRun } = docx;
+        
+        const children = [];
+        
+        // Antet
+        children.push(new Paragraph({
+            children: [new TextRun({ text: "PROCES VERBAL DE REVIZIE VENTILATOARE - Miron Costin", bold: true, size: 32, color: "8b1a1a" })],
+            alignment: AlignmentType.CENTER,
+            spacing: { after: 300 }
+        }));
+
+        // Date
+        children.push(new Paragraph({ children: [new TextRun({ text: "Data: ", bold: true }), new TextRun(document.getElementById('dataPV').value)] }));
+        children.push(new Paragraph({ children: [new TextRun({ text: "Tehnician: ", bold: true }), new TextRun(document.getElementById('tehnician').value)] }));
+        children.push(new Paragraph({ children: [new TextRun({ text: "Adresa: ", bold: true }), new TextRun(document.getElementById('adresa').value)] }));
+        children.push(new Paragraph({ children: [new TextRun({ text: "Tip verificare: ", bold: true }), new TextRun(document.querySelector('input[name="tipVerificare"]:checked').value)] }));
+        children.push(new Paragraph({ children: [new TextRun({ text: "Instalație: ", bold: true }), new TextRun(document.getElementById('instalatie').value)] }));
+        children.push(new Paragraph({ children: [new TextRun({ text: "Echipament: ", bold: true }), new TextRun(document.getElementById('echipament').value)] }));
+        children.push(new Paragraph({ children: [new TextRun({ text: "Zone: ", bold: true }), new TextRun(document.getElementById('zone').value)] }));
+        children.push(new Paragraph({ children: [new TextRun({ text: "Status la sosire: ", bold: true }), new TextRun(document.getElementById('statusSosire').value), new TextRun({ text: "   Status la plecare: ", bold: true }), new TextRun(document.getElementById('statusPlecare').value)] }));
+        
+        children.push(new Paragraph({ text: "", spacing: { after: 200 } }));
+
+        // Tabel criterii
+        const rows = document.querySelectorAll('#tabelBody tr');
+        const tableRows = [];
+        
+        // Header tabel
+        tableRows.push(new TableRow({
+            children: [
+                new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: "Descrierea operațiunilor", bold: true })] })] }),
+                new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: "Conform", bold: true })] })] }),
+                new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: "Neconform", bold: true })] })] }),
+                new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: "Realizat", bold: true })] })] }),
+            ]
+        }));
+
+        rows.forEach(tr => {
+            const cells = tr.querySelectorAll('td');
+            const desc = cells[0].querySelector('input').value;
+            const conf = cells[1].querySelector('input').checked ? "X" : "";
+            const neconf = cells[2].querySelector('input').checked ? "X" : "";
+            const real = cells[3].querySelector('input').checked ? "X" : "";
+            tableRows.push(new TableRow({
+                children: [
+                    new TableCell({ children: [new Paragraph(desc)] }),
+                    new TableCell({ children: [new Paragraph({ text: conf, alignment: AlignmentType.CENTER })] }),
+                    new TableCell({ children: [new Paragraph({ text: neconf, alignment: AlignmentType.CENTER })] }),
+                    new TableCell({ children: [new Paragraph({ text: real, alignment: AlignmentType.CENTER })] }),
+                ]
+            }));
+        });
+
+        children.push(new Table({ rows: tableRows, width: { size: 100, type: WidthType.PERCENTAGE } }));
+        
+        children.push(new Paragraph({ text: "", spacing: { after: 300 } }));
+        
+        // Observatii
+        children.push(new Paragraph({ children: [new TextRun({ text: "Observații și recomandări:", bold: true })] }));
+        children.push(new Paragraph(document.getElementById('observatii').value));
+
+        // Footer
+        children.push(new Paragraph({ text: "", spacing: { after: 300 } }));
+        children.push(new Paragraph({
+            children: [new TextRun({ text: "Calea Griviței 180, Sector 1, București", italics: true, size: 20 })],
+            alignment: AlignmentType.CENTER
+        }));
+
+        const doc = new Document({ sections: [{ properties: {}, children: children }] });
+        
+        Packer.toBlob(doc).then(blob => {
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'PV_Ventilatoare_MironCostin.docx';
+            a.click();
+            window.URL.revokeObjectURL(url);
+        });
+    }
+
+    // --- RESET ---
+    function resetForm() {
+        if (confirm("Sigur vrei să resetezi toate câmpurile?")) {
+            location.reload();
+        }
+    }
+
+    // --- INIT ---
+    document.addEventListener('DOMContentLoaded', () => {
+        renderTable();
+    });
+</script>
+</body>
+</html>
